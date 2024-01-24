@@ -1,11 +1,12 @@
 package main
 
 import (
-	"encoding/json"
 	"flag"
 	"fmt"
 	"log"
 	"net/http"
+	"os"
+	"time"
 )
 
 const version = "1.0.0"
@@ -21,6 +22,11 @@ type AppStatus struct {
 	Version      string `json:"version"`
 }
 
+type Application struct {
+	Config
+	Logger *log.Logger
+}
+
 func main() {
 	var config Config
 
@@ -28,27 +34,44 @@ func main() {
 	flag.StringVar(&config.Env, "env", "development", "Applicaton environtment (development|production)")
 	flag.Parse()
 
+	logger := log.New(os.Stdout, "", log.Ldate|log.Ltime)
+
+	app := &Application{
+		Config: config,
+		Logger: logger,
+	}
+
 	fmt.Println("Server is running...")
 
-	http.HandleFunc("/status", func(writer http.ResponseWriter, request *http.Request) {
-		currentStatus := AppStatus{
-			Status:       "Online",
-			Environtment: config.Env,
-			Version:      version,
-		}
+	//http.HandleFunc("/status", func(writer http.ResponseWriter, request *http.Request) {
+	//	currentStatus := AppStatus{
+	//		Status:       "Online",
+	//		Environtment: config.Env,
+	//		Version:      version,
+	//	}
+	//
+	//	res, err := json.MarshalIndent(currentStatus, "", "\t")
+	//	if err != nil {
+	//		log.Println(err)
+	//
+	//	}
+	//
+	//	writer.Header().Set("Content-Type", "application/json")
+	//	writer.WriteHeader(http.StatusOK)
+	//	writer.Write(res)
+	//})
 
-		res, err := json.MarshalIndent(currentStatus, "", "\t")
-		if err != nil {
-			log.Println(err)
+	server := &http.Server{
+		Addr:         fmt.Sprintf(":%d", config.Port),
+		Handler:      app.routes(),
+		IdleTimeout:  time.Minute,
+		ReadTimeout:  10 * time.Second,
+		WriteTimeout: 30 * time.Second,
+	}
 
-		}
+	logger.Printf("Starting server on port ", config.Port)
 
-		writer.Header().Set("Content-Type", "application/json")
-		writer.WriteHeader(http.StatusOK)
-		writer.Write(res)
-	})
-
-	err := http.ListenAndServe(fmt.Sprintf(":%d", config.Port), nil)
+	err := server.ListenAndServe()
 	if err != nil {
 		log.Println(err)
 	}
