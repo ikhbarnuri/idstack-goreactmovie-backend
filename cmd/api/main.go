@@ -69,7 +69,7 @@ func main() {
 		WriteTimeout: 30 * time.Second,
 	}
 
-	logger.Printf("Starting server on port ", config.Port)
+	logger.Printf("Starting server on port %d", config.Port)
 
 	err := server.ListenAndServe()
 	if err != nil {
