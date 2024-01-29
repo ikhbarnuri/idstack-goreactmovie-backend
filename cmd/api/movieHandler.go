@@ -1,7 +1,6 @@
 package main
 
 import (
-	"errors"
 	"github.com/julienschmidt/httprouter"
 	"idstack-goreactmovie-backend/models"
 	"net/http"
@@ -14,7 +13,8 @@ func (app *Application) getOneMovie(w http.ResponseWriter, r *http.Request) {
 
 	id, err := strconv.Atoi(params.ByName("id"))
 	if err != nil {
-		app.Logger.Println(errors.New("Invalid id paramater"))
+		app.errorJSON(w, err)
+		return
 	}
 
 	movie := models.Movie{
