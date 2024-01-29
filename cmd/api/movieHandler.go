@@ -2,10 +2,8 @@ package main
 
 import (
 	"github.com/julienschmidt/httprouter"
-	"idstack-goreactmovie-backend/models"
 	"net/http"
 	"strconv"
-	"time"
 )
 
 func (app *Application) getOneMovie(w http.ResponseWriter, r *http.Request) {
@@ -17,18 +15,12 @@ func (app *Application) getOneMovie(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	movie := models.Movie{
-		Id:          id,
-		Title:       "some movie title",
-		Description: "some description",
-		Year:        25,
-		ReleaseDate: time.Date(1990, 01, 01, 01, 0, 0, 0, time.Local),
-		Runtime:     112,
-		Rating:      5,
-		MPPAARating: "PG-13",
-		CreatedAt:   time.Now(),
-		UpdatedAt:   time.Now(),
+	get, err := app.Models.DB.Get(id)
+	if err != nil {
+		app.errorJSON(w, err)
+		return
 	}
+	movie := get
 
 	app.writeJSON(w, http.StatusOK, movie, "movie")
 }

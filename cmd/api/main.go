@@ -6,6 +6,7 @@ import (
 	"flag"
 	"fmt"
 	_ "github.com/lib/pq"
+	"idstack-goreactmovie-backend/models"
 	"log"
 	"net/http"
 	"os"
@@ -31,6 +32,7 @@ type AppStatus struct {
 type Application struct {
 	Config
 	Logger *log.Logger
+	Models models.Models
 }
 
 func main() {
@@ -57,6 +59,7 @@ func main() {
 	app := &Application{
 		Config: config,
 		Logger: logger,
+		Models: models.NewModels(open),
 	}
 
 	fmt.Println("Server is running...")
