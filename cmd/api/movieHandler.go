@@ -24,3 +24,17 @@ func (app *Application) getOneMovie(w http.ResponseWriter, r *http.Request) {
 
 	app.writeJSON(w, http.StatusOK, movie, "movie")
 }
+
+func (app *Application) getAllMovies(w http.ResponseWriter, r *http.Request) {
+	movies, err := app.Models.DB.All()
+	if err != nil {
+		app.errorJSON(w, err)
+		return
+	}
+
+	err = app.writeJSON(w, http.StatusOK, movies, "movies")
+	if err != nil {
+		app.errorJSON(w, err)
+		return
+	}
+}
