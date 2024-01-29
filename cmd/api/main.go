@@ -1,8 +1,11 @@
 package main
 
 import (
+	"context"
+	"database/sql"
 	"flag"
 	"fmt"
+	_ "github.com/lib/pq"
 	"log"
 	"net/http"
 	"os"
@@ -14,6 +17,9 @@ const version = "1.0.0"
 type Config struct {
 	Port int
 	Env  string
+	Db   struct {
+		Dsn string
+	}
 }
 
 type AppStatus struct {
@@ -32,9 +38,21 @@ func main() {
 
 	flag.IntVar(&config.Port, "port", 4000, "Server port to listen on ")
 	flag.StringVar(&config.Env, "env", "development", "Applicaton environtment (development|production)")
+	flag.StringVar(&config.Db.Dsn, "dsn", "postgres://postgres:postgres@localhost/gomoviereact?sslmode=disable", "Postgre connection config")
 	flag.Parse()
 
 	logger := log.New(os.Stdout, "", log.Ldate|log.Ltime)
+
+	open, err := openDB(config)
+	if err != nil {
+		logger.Fatal(err)
+	}
+	defer func(open *sql.DB) {
+		err := open.Close()
+		if err != nil {
+			logger.Fatal(err)
+		}
+	}(open)
 
 	app := &Application{
 		Config: config,
@@ -71,8 +89,25 @@ func main() {
 
 	logger.Printf("Starting server on port %d", config.Port)
 
-	err := server.ListenAndServe()
+	err = server.ListenAndServe()
 	if err != nil {
 		log.Println(err)
 	}
+}
+
+func openDB(cfg Config) (*sql.DB, error) {
+	db, err := sql.Open("postgres", cfg.Db.Dsn)
+	if err != nil {
+		return nil, err
+	}
+
+	ctx, cancelFunc := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancelFunc()
+
+	err = db.PingContext(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	return db, nil
 }
