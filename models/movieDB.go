@@ -138,7 +138,7 @@ func (m *DBModel) All(genre ...int) ([]*Movie, error) {
 			if err != nil {
 				return nil, err
 			}
-			genres[mg.Id] = mg.Genre.GenreName
+			genres[mg.GenreId] = mg.Genre.GenreName
 		}
 		genreRows.Close()
 		movie.MovieGenre = genres

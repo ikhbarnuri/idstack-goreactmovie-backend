@@ -1,10 +1,25 @@
 package main
 
 import (
+	"encoding/json"
 	"github.com/julienschmidt/httprouter"
+	"idstack-goreactmovie-backend/models"
+	"log"
 	"net/http"
 	"strconv"
+	"time"
 )
+
+type MoviePayload struct {
+	Id          string `json:"id"`
+	Title       string `json:"title"`
+	Description string `json:"description"`
+	Year        string `json:"year"`
+	ReleaseDate string `json:"release_date"`
+	Runtime     string `json:"runtime"`
+	Rating      string `json:"rating"`
+	MPPAARating string `json:"mppaa_rating"`
+}
 
 func (app *Application) getOneMovie(w http.ResponseWriter, r *http.Request) {
 	params := httprouter.ParamsFromContext(r.Context())
@@ -73,4 +88,27 @@ func (app *Application) getAllMoviesByGenres(w http.ResponseWriter, r *http.Requ
 		app.errorJSON(w, err)
 		return
 	}
+}
+
+func (app *Application) addMovie(w http.ResponseWriter, r *http.Request) {
+	var payload MoviePayload
+	err := json.NewDecoder(r.Body).Decode(&payload)
+	if err != nil {
+		log.Println(err)
+		app.errorJSON(w, err)
+		return
+	}
+
+	var movie models.Movie
+
+	movie.Id, _ = strconv.Atoi(payload.Id)
+	movie.Title = payload.Title
+	movie.Description = payload.Description
+	movie.ReleaseDate, _ = time.Parse("2006-01-02", payload.ReleaseDate)
+	movie.Year = movie.ReleaseDate.Year()
+	movie.Runtime, _ = strconv.Atoi(payload.Runtime)
+	movie.Rating, _ = strconv.Atoi(payload.Rating)
+	movie.MPPAARating = payload.MPPAARating
+	movie.CreatedAt = time.Now()
+	movie.UpdatedAt = time.Now()
 }
