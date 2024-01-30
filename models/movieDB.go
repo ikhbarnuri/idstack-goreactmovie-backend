@@ -137,3 +137,40 @@ func (m *DBModel) All() ([]*Movie, error) {
 
 	return movies, nil
 }
+
+func (m *DBModel) GetGenreAll() ([]*Genre, error) {
+	ctx, cancelFunc := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancelFunc()
+
+	query := `SELECT 
+				*
+			FROM 
+				genres 
+			ORDER BY 
+				genre_name	`
+
+	rows, err := m.DB.QueryContext(ctx, query)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var genres []*Genre
+
+	for rows.Next() {
+		var genre Genre
+		err = rows.Scan(
+			&genre.Id,
+			&genre.GenreName,
+			&genre.CreatedAt,
+			&genre.UpdatedAt,
+		)
+		if err != nil {
+			return nil, err
+		}
+
+		genres = append(genres, &genre)
+	}
+
+	return genres, nil
+}
