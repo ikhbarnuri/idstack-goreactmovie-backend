@@ -182,3 +182,36 @@ func (app *Application) editMovie(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 }
+
+func (app *Application) deleteMovie(w http.ResponseWriter, r *http.Request) {
+	var payload MoviePayload
+	err := json.NewDecoder(r.Body).Decode(&payload)
+	if err != nil {
+		log.Println(err)
+		app.errorJSON(w, err)
+		return
+	}
+
+	id, _ := strconv.Atoi(payload.Id)
+	err = app.Models.DB.DeleteMovie(id)
+	if err != nil {
+		log.Println(err)
+		app.errorJSON(w, err)
+		return
+	}
+
+	type jsonRes struct {
+		Ok bool `json:"ok"`
+	}
+
+	ok := jsonRes{
+		Ok: true,
+	}
+
+	err = app.writeJSON(w, http.StatusOK, ok, "response")
+	if err != nil {
+		log.Println(err)
+		app.errorJSON(w, err)
+		return
+	}
+}
